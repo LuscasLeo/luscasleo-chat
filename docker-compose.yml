@@ -1,0 +1,54 @@
+version: "3.2"
+
+services:
+  app:
+    container_name: web__app
+    build: .
+    command: yarn webapp:start
+    working_dir: /usr/app/web
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.port=${APP_PORT}"
+      - "traefik.frontend.rule=Host:${APP_DOMAIN}"
+  api:
+    container_name: web__api
+    working_dir: /usr/app/api
+    build: .
+    command: yarn api:start
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.port=${API_PORT}"
+      - "traefik.frontend.rule=Host:${API_DOMAIN}"
+
+  reverse-proxy:
+    container_name: traefik_proxyy
+    image: traefik:alpine
+    command:
+      - --api
+      - --docker
+      # - --docker.swarmmode
+      # - --docker.watch
+      - --entrypoints=Name:http Address::80 Redirect.EntryPoint:https
+      - --entrypoints=Name:https Address::443 TLS
+      - --defaultentrypoints=http,https
+      - --acme
+      - --acme.email=contact@luscasleo.dev
+      - --acme.storage=acme.json
+      - --acme.entryPoint=https
+      - --acme.httpChallenge.entryPoint=http
+      - --acme.onhostrule=true
+      - --acme.acmelogging=true
+      - --logLevel=ERROR
+      - --accessLog
+
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - /opt/traefik/acme.json:/acme.json

@@ -1,0 +1,7 @@
+node_modules
+program/web-app/dist
+
+.env
+yarn.lock
+yarn-error.log
+package-lock.json
