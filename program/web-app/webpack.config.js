@@ -1,6 +1,8 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const ESLintPlugin = require("eslint-webpack-plugin");
+const Dotenv = require("dotenv-webpack");
+const ErrorOverlayPlugin = require("error-overlay-webpack-plugin");
+
 /**
  * @type import('webpack').Configuration
  */
@@ -16,6 +18,8 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: path.join(__dirname, "public", "index.html"),
     }),
+    new Dotenv(),
+    new ErrorOverlayPlugin(),
   ],
 
   module: {
@@ -55,5 +59,6 @@ module.exports = {
   devServer: {
     // inline: true,
     port: 3001,
+    historyApiFallback: true,
   },
 };
