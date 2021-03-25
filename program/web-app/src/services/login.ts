@@ -1,16 +1,25 @@
-export async function checkLogin(code: string) {
+import axios from 'axios';
+
+const api = axios.create({ baseURL: 'http://localhost:3000' });
+
+export async function signIn(code: string) {
   try {
-    const response = await fetch(
-      `http://localhost:3000/login/logged?` +
-        new URLSearchParams({
-          code,
-        })
-    );
+    const response = await api.get(`/signin/github/${encodeURI(code)}`);
 
     console.log(response);
-    return await response.json();
+    return response.data;
   } catch (err) {
     console.log('err: ', err);
-    return null;
+    throw null;
+  }
+}
+
+export async function validateToken(token: string) {
+  try {
+    const response = await api.post(`/login/validate`, {
+      token,
+    });
+  } catch {
+    throw false;
   }
 }

@@ -1,10 +1,12 @@
-import { Entity, ObjectIdColumn, ObjectID, Column } from "typeorm";
+import { Column, Entity, getRepository, PrimaryGeneratedColumn } from "typeorm";
 
-@Entity()
+@Entity("users")
 export class User {
-  @ObjectIdColumn()
-  id: ObjectID;
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
 
   @Column()
   username: string;
 }
+
+export const getUsersRepo = () => getRepository(User);

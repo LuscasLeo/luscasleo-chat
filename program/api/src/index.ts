@@ -4,8 +4,10 @@ import express from "express";
 import log4js from "log4js";
 import request from "superagent";
 import ChatRoom from "./chat";
+import { crypt, decode } from "./encryption/jwt";
 import stringCodec from "./socket/codecs/stringCodec";
 import { createServer } from "./socket/server";
+import { GithubProfile } from "./types/github";
 dotenv.config();
 
 log4js.configure({
@@ -52,11 +54,11 @@ async function init() {
     res.json({ messages: chat.messages });
   });
 
-  app.get("/login/logged", async (req, res) => {
+  app.get("/signin/github/:code", async (req, res) => {
     try {
-      if (!req.query.code)
+      if (!req.params.code)
         return res.status(400).json({ message: "no code provided" });
-      const { code } = req.query;
+      const { code } = req.params;
       logger.debug(`Getting access token for code ${code}`);
       const authData = await request
         .post("https://github.com/login/oauth/access_token")
@@ -74,22 +76,33 @@ async function init() {
       };
       logger.debug(`Token: ${access_token}`);
 
-      const userData = await request
+      const response = await request
         .get("https://api.github.com/user")
         .send()
         .set("Authorization", `token ${access_token}`)
         .set("User-Agent", req.get("User-Agent"));
 
-      res.json(userData.body);
+      const { name } = response.body as GithubProfile;
+
+      res.json({
+        token: crypt({
+          username: name,
+        }),
+      });
     } catch (err) {
-      const error = err as { response: request.Response; status: number };
-      logger.warn(
-        "Error when authenticating user: ",
-        error.status,
-        error.response.body
-      );
-      res.status(error.status);
-      res.json({ message: "Error", error: error.response.body });
+      res.json({ message: "Error", err });
+    }
+  });
+
+  app.post("/sign/validate", (req, res) => {
+    if (!req.body.token) return res.status(403).send();
+
+    const { token } = req.body;
+    try {
+      const valid = decode(token);
+      return res.json(valid);
+    } catch {
+      return res.status(403).send();
     }
   });
 
