@@ -2,7 +2,7 @@ import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useEffect, useState } from 'react';
 import { Button } from 'react-bootstrap';
-import { useHistory, useParams } from 'react-router';
+import { useHistory } from 'react-router';
 import { signIn, validateToken } from '../../services/login';
 import { useQuery } from '../../utils';
 import { LoginContainer } from './style';
@@ -12,13 +12,7 @@ const Login: React.FC<{}> = () => {
   const [logging, setLogging] = useState(false);
 
   useEffect(() => {
-    const { token = '' } = (() => {
-      try {
-        JSON.parse(localStorage.getItem('token') || '{}');
-      } catch {
-        return {};
-      }
-    })();
+    const token = localStorage.getItem('token');
     if (!!token) {
       setLogging(true);
       validateToken(token)
@@ -33,11 +27,11 @@ const Login: React.FC<{}> = () => {
 
     if (!code) return;
     signIn(code)
-      .then((token) => {
-        localStorage.setItem('token', JSON.stringify(token));
+      .then((response) => {
+        localStorage.setItem('token', response.token);
         history.push('/chat');
       })
-      .catch((err) => {
+      .catch(() => {
         setLogging(false);
       });
     history.replace('');

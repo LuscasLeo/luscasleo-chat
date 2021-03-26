@@ -16,10 +16,16 @@ export async function signIn(code: string) {
 
 export async function validateToken(token: string) {
   try {
-    const response = await api.post(`/login/validate`, {
+    const response = await api.post(`/sign/validate`, {
       token,
     });
+
+    return response;
   } catch {
     throw false;
   }
+}
+
+export function isLoggedIn() {
+  return !!localStorage();
 }
