@@ -27,7 +27,7 @@ const Chat: React.FC<{}> = () => {
         </ChatMessage>
       </ChatHistoryArea>
       <ChatInputArea>
-        <ChatInput />
+        <ChatInput placeholder="Type here..." />
       </ChatInputArea>
     </ChatContainer>
   );

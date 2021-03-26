@@ -42,7 +42,7 @@ async function init() {
 
   logger.info(`Websocket Server listening to port ${WS_PORT}`);
 
-  console.log("INITIALIZING EXPRESS SERVER V1.1");
+  logger.info("INITIALIZING EXPRESS SERVER V1.1");
   const app = express();
 
   //USE LIBS
@@ -108,7 +108,7 @@ async function init() {
 
   //LISTEN
   app.listen(Number(API_PORT), () =>
-    console.log(`API SERVER LISTENING TO PORT ${API_PORT}`)
+    logger.info(`API SERVER LISTENING TO PORT ${API_PORT}`)
   );
 }
 
