@@ -2,47 +2,37 @@ import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useEffect, useState } from 'react';
 import { Button } from 'react-bootstrap';
+import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router';
-import { signIn, validateToken } from '../../services/login';
+import { getStoredToken } from '../../services/login';
+import { RootState } from '../../store';
+import { trySignIn, validateLogin } from '../../store/login/loginReducer';
 import { useQuery } from '../../utils';
 import { LoginContainer } from './style';
 const Login: React.FC<{}> = () => {
   const history = useHistory();
   const query = useQuery();
-  const [logging, setLogging] = useState(false);
+
+  const dispatch = useDispatch();
+  const { isLogged, isLogging } = useSelector(
+    (state: RootState) => state.login
+  );
 
   useEffect(() => {
-    //Is logged?
-    const token = localStorage.getItem('token');
-    if (!!token) {
-      setLogging(true);
-      validateToken(token)
-        .then(() => history.push('/chat'))
-        .catch(() => {
-          setLogging(false);
-          localStorage.removeItem('token');
-        });
-    }
+    if (isLogged) history.push('/chat');
+  }, [isLogged]);
 
-    //Is Logging
+  useEffect(() => {
     const code = query.get('code');
-
-    if (!code) return;
-    signIn(code)
-      .then((response) => {
-        localStorage.setItem('token', response.token);
-        history.push('/chat');
-      })
-      .catch(() => {
-        setLogging(false);
-      });
-
-    history.replace('');
+    const storedToken = getStoredToken();
+    if (!!code) dispatch(trySignIn(code));
+    else if (!!storedToken) dispatch(validateLogin(storedToken));
   }, []);
+
   return (
     <LoginContainer>
       <Button
-        disabled={!!logging}
+        disabled={isLogging || isLogged}
         as="a"
         href={`https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_API_CLIENT}&redirect_url=${location.href}`}
         size="lg"

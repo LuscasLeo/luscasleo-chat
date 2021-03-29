@@ -1,4 +1,4 @@
-import { Container, FormControl } from 'react-bootstrap';
+import { Button, Container, FormControl } from 'react-bootstrap';
 import styled from 'styled-components';
 
 export const ChatContainer = styled(Container)`
@@ -6,9 +6,15 @@ export const ChatContainer = styled(Container)`
   height: 100%;
   display: flex;
   flex-direction: column;
+  padding: 0;
 `;
-export const ChatInputArea = styled.div`
+export const ChatInputArea = styled.form`
   height: 4em;
+`;
+
+export const LogoutButton = styled(Button)`
+  border: none;
+  border-radius: 0;
 `;
 
 export const ChatInput = styled(FormControl)`
@@ -38,5 +44,11 @@ export const ChatMessage = styled.div`
   > strong {
     align-self: start;
     margin-right: 1rem;
+    white-space: nowrap;
+  }
+
+  > span {
+    min-width: 0;
+    word-break: break-word;
   }
 `;

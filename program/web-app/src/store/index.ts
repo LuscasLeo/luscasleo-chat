@@ -1,4 +1,5 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { Action, configureStore, ThunkAction } from '@reduxjs/toolkit';
+import { useDispatch } from 'react-redux';
 import chatReducer from './chat/chatReducer';
 import loginReducer from './login/loginReducer';
 
@@ -9,6 +10,12 @@ const store = configureStore({
   },
 });
 
-export type RootReducer = ReturnType<typeof store.getState>;
+export type RootState = ReturnType<typeof store.getState>;
+
+export type AppDispatch = typeof store.dispatch;
+
+export type AppThunk = ThunkAction<void, RootState, null, Action<String>>;
+
+export const useAppDispatch = () => useDispatch<AppDispatch>();
 
 export default store;

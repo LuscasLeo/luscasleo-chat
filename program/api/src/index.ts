@@ -8,6 +8,7 @@ import { crypt, decode } from "./encryption/jwt";
 import stringCodec from "./socket/codecs/stringCodec";
 import { createServer } from "./socket/server";
 import { GithubProfile } from "./types/github";
+import { SigninResult, SigninValidateResult } from "../../shared/types";
 dotenv.config();
 
 log4js.configure({
@@ -82,13 +83,15 @@ async function init() {
         .set("Authorization", `token ${access_token}`)
         .set("User-Agent", req.get("User-Agent"));
 
-      const { name } = response.body as GithubProfile;
+      const { login: username } = response.body as GithubProfile;
 
       res.json({
         token: crypt({
-          username: name,
+          username,
         }),
-      });
+
+        username,
+      } as SigninResult);
     } catch (err) {
       res.json({ message: "Error", err });
     }
@@ -100,7 +103,7 @@ async function init() {
     const { token } = req.body;
     try {
       const valid = decode(token);
-      return res.json(valid);
+      return res.json(valid as SigninValidateResult);
     } catch {
       return res.status(403).send();
     }
