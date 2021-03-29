@@ -33,6 +33,7 @@ export const ChatHistoryArea = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
+  /* justify-content: flex-end; */
   overflow-y: scroll;
 `;
 
@@ -50,5 +51,9 @@ export const ChatMessage = styled.div`
   > span {
     min-width: 0;
     word-break: break-word;
+  }
+
+  &:first-child {
+    margin-top: auto;
   }
 `;

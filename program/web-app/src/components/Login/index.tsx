@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router';
 import { getStoredToken } from '../../services/login';
 import { RootState } from '../../store';
-import { trySignIn, validateLogin } from '../../store/login/loginReducer';
+import { trySignIn, validateLogin } from '../../store/login/login.reducer';
 import { useQuery } from '../../utils';
 import { LoginContainer } from './style';
 const Login: React.FC<{}> = () => {

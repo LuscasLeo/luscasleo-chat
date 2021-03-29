@@ -1,12 +1,14 @@
 import { Action, configureStore, ThunkAction } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
-import chatReducer from './chat/chatReducer';
-import loginReducer from './login/loginReducer';
+import chatReducer from './chat/chat.reducer';
+import loginReducer from './login/login.reducer';
+import websocketReducer from './websocket/websocket.reducer';
 
 const store = configureStore({
   reducer: {
     login: loginReducer,
     chat: chatReducer,
+    websocket: websocketReducer,
   },
 });
 

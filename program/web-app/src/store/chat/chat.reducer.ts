@@ -4,7 +4,7 @@ export type Message = {
   message: string;
   //NOT RECOMMENDED TO PUT NON-SERIALIZABLE ITEMS
   timestamp: string;
-  username: string;
+  sender: string;
 };
 
 const chat = createSlice({
@@ -16,12 +16,12 @@ const chat = createSlice({
     addMessage(
       state,
       {
-        payload: { username, message },
+        payload: { sender, message },
       }: PayloadAction<Omit<Message, 'timestamp'>>
     ) {
       state.messages.push({
         message,
-        username,
+        sender,
         timestamp: new Date().toLocaleTimeString(),
       });
     },

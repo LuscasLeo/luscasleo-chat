@@ -52,9 +52,13 @@ export function trySignIn(code: string): AppThunk {
 
 export function validateLogin(token: string): AppThunk {
   return async function (dispatch: AppDispatch) {
-    const { username } = await validateToken(token);
+    try {
+      const { username } = await validateToken(token);
 
-    dispatch(signIn({ token, username }));
+      dispatch(signIn({ token, username }));
+    } catch {
+      dispatch(signOut());
+    }
   };
 }
 

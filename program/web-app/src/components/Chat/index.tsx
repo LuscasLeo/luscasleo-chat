@@ -9,8 +9,12 @@ import React, {
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { RootState } from '../../store';
-import { addMessage } from '../../store/chat/chatReducer';
-import { signOut } from '../../store/login/loginReducer';
+import { addMessage } from '../../store/chat/chat.reducer';
+import { signOut } from '../../store/login/login.reducer';
+import {
+  setUpWebSocket,
+  sendMessage,
+} from '../../store/websocket/websocket.reducer';
 import {
   ChatContainer,
   ChatHistoryArea,
@@ -26,6 +30,7 @@ const Chat: React.FC<{}> = () => {
   const dispatch = useDispatch();
   const { messages } = useSelector((state: RootState) => state.chat);
   const { username, isLogged } = useSelector((state: RootState) => state.login);
+  const { isOpen } = useSelector((state: RootState) => state.websocket);
 
   useEffect(() => {
     if (!isLogged) history.push('/');
@@ -56,10 +61,16 @@ const Chat: React.FC<{}> = () => {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!messageValue) return;
+    sendMessage(
+      JSON.stringify({
+        message: messageValue,
+        sender: username,
+      })
+    );
     dispatch(
       addMessage({
         message: messageValue,
-        username,
+        sender: username,
       })
     );
     setMessageValue('');
@@ -69,11 +80,16 @@ const Chat: React.FC<{}> = () => {
   return (
     <ChatContainer fluid>
       <LogoutButton onClick={() => dispatch(signOut())}>Sair</LogoutButton>
+      <LogoutButton
+        onClick={() => dispatch(setUpWebSocket('ws://localhost:3311'))}
+      >
+        Conexão ({isOpen ? 'Aberta' : 'Fechada'})
+      </LogoutButton>
       <ChatHistoryArea>
         {messages.map((message, index) => (
           <ChatMessage key={index}>
             <strong>
-              [{message.timestamp}] {message.username}:{' '}
+              [{message.timestamp}] {message.sender}:{' '}
             </strong>
             <span>{message.message}</span>
           </ChatMessage>

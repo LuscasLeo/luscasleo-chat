@@ -15,6 +15,8 @@ export default class ChatRoom {
         timestamp: Date.now(),
         from: client.connectionString(),
       });
+
+      this.server.broadcast(`${client.connectionString()}: ${message}`);
     });
   }
 }
