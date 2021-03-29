@@ -12,6 +12,7 @@ const Login: React.FC<{}> = () => {
   const [logging, setLogging] = useState(false);
 
   useEffect(() => {
+    //Is logged?
     const token = localStorage.getItem('token');
     if (!!token) {
       setLogging(true);
@@ -23,6 +24,7 @@ const Login: React.FC<{}> = () => {
         });
     }
 
+    //Is Logging
     const code = query.get('code');
 
     if (!code) return;
@@ -34,6 +36,7 @@ const Login: React.FC<{}> = () => {
       .catch(() => {
         setLogging(false);
       });
+
     history.replace('');
   }, []);
   return (

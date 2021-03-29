@@ -1,5 +1,7 @@
-import React from 'react';
-import { FormControl } from 'react-bootstrap';
+import React, { ChangeEvent, FormEvent, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootReducer } from '../../store';
+import { addMessage } from '../../store/chat/chatReducer';
 import {
   ChatContainer,
   ChatHistoryArea,
@@ -7,27 +9,44 @@ import {
   ChatInputArea,
   ChatMessage,
 } from './style';
+
 const Chat: React.FC<{}> = () => {
+  const dispatch = useDispatch();
+
+  const [messageValue, setMessageValue] = useState('');
+
+  const { messages } = useSelector((state: RootReducer) => state.chat);
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    dispatch(addMessage(messageValue));
+    setMessageValue('');
+  };
+
   return (
     <ChatContainer fluid>
       <ChatHistoryArea>
-        <ChatMessage>
-          <strong>Lucas: </strong>
-          <span>Hello World!</span>
-        </ChatMessage>
-
-        <ChatMessage>
-          <strong>Lucas: </strong>
-          <span>
-            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ipsam eum
-            quos doloremque iure perspiciatis velit rerum quas illo consequuntur
-            magni cum impedit adipisci, nobis possimus, quo eaque, doloribus
-            quam consectetur.!
-          </span>
-        </ChatMessage>
+        {messages.map((message, index) => (
+          <ChatMessage key={index}>
+            <strong>
+              [{message.timestamp.toLocaleTimeString()}] {message.username}:{' '}
+            </strong>
+            <span>{message.message}</span>
+          </ChatMessage>
+        ))}
       </ChatHistoryArea>
       <ChatInputArea>
-        <ChatInput placeholder="Type here..." />
+        <form onSubmit={handleSubmit}>
+          <ChatInput
+            autoFocus
+            onChange={(ev: ChangeEvent<HTMLInputElement>) =>
+              setMessageValue(ev.target.value)
+            }
+            value={messageValue}
+            placeholder="Type here..."
+          />
+        </form>
       </ChatInputArea>
     </ChatContainer>
   );

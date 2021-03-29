@@ -27,5 +27,5 @@ export async function validateToken(token: string) {
 }
 
 export function isLoggedIn() {
-  return !!localStorage();
+  // return !!localStorage();
 }
