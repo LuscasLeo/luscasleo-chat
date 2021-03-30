@@ -1,4 +1,4 @@
-import { SocketCommunicationCodec } from "../types";
+import { SocketCommunicationCodec } from "../../../../api/src/socket/types";
 
 export default <SocketCommunicationCodec<Object>>{
   decode(data) {

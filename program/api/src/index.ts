@@ -3,12 +3,12 @@ import dotenv from "dotenv";
 import express from "express";
 import log4js from "log4js";
 import request from "superagent";
+import { SigninResult, SigninValidateResult } from "../../shared/types";
 import ChatRoom from "./chat";
 import { crypt, decode } from "./encryption/jwt";
-import stringCodec from "./socket/codecs/stringCodec";
+import actionCodec from "../../shared/websocket/socket/codecs/actionCodec";
 import { createServer } from "./socket/server";
 import { GithubProfile } from "./types/github";
-import { SigninResult, SigninValidateResult } from "../../shared/types";
 dotenv.config();
 
 log4js.configure({
@@ -36,7 +36,7 @@ async function init() {
     {
       port: Number(WS_PORT),
     },
-    stringCodec
+    actionCodec
   );
 
   const chat = new ChatRoom(server);

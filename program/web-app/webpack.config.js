@@ -31,7 +31,10 @@ module.exports = {
 
       {
         test: /.(t|j)sx?$/,
-        include: [path.resolve(__dirname, "src")],
+        include: [
+          path.resolve(__dirname, "src"),
+          path.resolve(__dirname, "..", "shared"),
+        ],
         exclude: [path.resolve(__dirname, "..", "..", "..", "node_modules")],
         loader: "babel-loader",
         options: {

@@ -1,8 +1,17 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AppDispatch, AppThunk } from '..';
+import store, { AppDispatch, AppThunk } from '..';
+import {
+  clientActions,
+  MessageHeaderTypes,
+  MessageInstance,
+  MessageReceiver,
+} from '../../../../shared/websocket/communication/types';
+import { getStoredToken } from '../../services/login';
+import { addMessage } from '../chat/chat.reducer';
 
 const connection = {
   websocket: undefined as WebSocket | undefined,
+  open: false,
 };
 
 const websocket = createSlice({
@@ -17,10 +26,28 @@ const websocket = createSlice({
   },
 });
 
+function sendData(data: any) {
+  if (!connection.websocket || !connection.open)
+    throw 'Websocket client instance not defined or closed';
+  connection.websocket.send(JSON.stringify(data));
+}
+
 export const { setConnectionOpen } = websocket.actions;
+
+export default websocket.reducer;
+
+function createReceiver(dispatch: AppDispatch): MessageReceiver {
+  return {
+    [MessageHeaderTypes.BROADCAST_MESSAGE]({ message }) {
+      dispatch(addMessage(message));
+      console.log('message', message);
+    },
+  };
+}
 
 export function setUpWebSocket(url: string): AppThunk {
   return async function (dispatch: AppDispatch) {
+    const receiver = createReceiver(dispatch);
     if (
       !!connection.websocket &&
       connection.websocket.readyState === connection.websocket.OPEN
@@ -30,20 +57,23 @@ export function setUpWebSocket(url: string): AppThunk {
     const ws = (connection.websocket = new WebSocket(url));
 
     ws.addEventListener('open', () => {
-      dispatch(setConnectionOpen(true));
+      dispatch(setConnectionOpen((connection.open = true)));
+      sendData(clientActions.chatHandshake(getStoredToken()!));
     });
     ws.addEventListener('close', () => {
-      dispatch(setConnectionOpen(false));
+      dispatch(setConnectionOpen((connection.open = false)));
     });
 
     ws.addEventListener('message', (event) => {
-      console.log(event.data);
+      const message = JSON.parse(event.data) as MessageInstance;
+      const listener = receiver[message.header];
+      if (listener) {
+        listener(message.payload);
+      } else console.error(`No listener for ${message.header}`, message);
     });
   };
 }
 
-export function sendMessage(data: any) {
-  connection.websocket?.send(data);
+export function sendMessage(message: string) {
+  sendData(clientActions.sendMessage(message));
 }
-
-export default websocket.reducer;

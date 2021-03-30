@@ -1,12 +1,15 @@
 import { IncomingMessage } from "http";
 import { getLogger, Logger } from "log4js";
 import WebSocket, { Data, EventEmitter, Server, ServerOptions } from "ws";
-import { SocketCommunicationCodec, WebSocketClient } from "./types";
+import { WebSocketClient } from "./client";
+import { SocketCommunicationCodec } from "./types";
 
 const logger: Logger = getLogger("socket.server.WebSocketServer");
 
 enum EventsNames {
   MESSAGE = "MESSAGE",
+  CONNECTION_OPEN = "CONNECTION_OPEN",
+  CONNECTION_CLOSE = "CONNECTION_CLOSE",
 }
 
 export default class WebSocketServer<T> extends EventEmitter {
@@ -22,10 +25,10 @@ export default class WebSocketServer<T> extends EventEmitter {
     this.socketServer = socketServer;
     this.connections = new Set();
 
-    this.socketServer.on("connection", this.onConnection.bind(this));
+    this.socketServer.on("connection", this._connectionOpen.bind(this));
   }
 
-  private onConnection(socket: WebSocket, incomingMessage: IncomingMessage) {
+  private _connectionOpen(socket: WebSocket, incomingMessage: IncomingMessage) {
     const client = new WebSocketClient(socket, incomingMessage);
 
     if (!logger.isDebugEnabled())
@@ -39,20 +42,21 @@ export default class WebSocketServer<T> extends EventEmitter {
 
     this.connections.add(client);
 
-    socket.on("message", (data) => this.onClientMessage(client, data));
+    socket.on("message", (data) => this._connectionMessage(client, data));
 
     socket.on("close", (code, reason) =>
-      this.onClientClose(client, code, reason)
+      this._connectionClose(client, code, reason)
     );
+
+    this.emit(EventsNames.CONNECTION_OPEN, client, incomingMessage);
   }
 
-  private onClientClose(
+  private _connectionClose(
     client: WebSocketClient,
     code: number,
     reason: string
   ): void {
     this.connections.delete(client);
-
     if (logger.isDebugEnabled())
       logger.debug(
         `Connection ${client.connectionString()} closed: [${code} -> '${reason}'] (${
@@ -60,9 +64,11 @@ export default class WebSocketServer<T> extends EventEmitter {
         } connections)`
       );
     else logger.info(`Connection ${client.connectionString()} closed`);
+
+    this.emit(EventsNames.CONNECTION_CLOSE, client, code, reason);
   }
 
-  private onClientMessage(client: WebSocketClient, data: Data) {
+  private _connectionMessage(client: WebSocketClient, data: Data) {
     try {
       const decoded = this.codec.decode(data);
 
@@ -84,6 +90,21 @@ export default class WebSocketServer<T> extends EventEmitter {
 
   public onMessage(listener: (client: WebSocketClient, message: T) => void) {
     this.on(EventsNames.MESSAGE, listener);
+  }
+
+  public onConnectionOpen(
+    listener: (
+      client: WebSocketClient,
+      incomingMessage: IncomingMessage
+    ) => void
+  ) {
+    this.on(EventsNames.CONNECTION_OPEN, listener);
+  }
+
+  public onConnectionClose(
+    listener: (client: WebSocketClient, code: number, reason: string) => void
+  ) {
+    this.on(EventsNames.CONNECTION_CLOSE, listener);
   }
 
   send(client: WebSocketClient, data: T) {

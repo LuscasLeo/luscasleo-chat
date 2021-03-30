@@ -1,11 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
-export type Message = {
-  message: string;
-  //NOT RECOMMENDED TO PUT NON-SERIALIZABLE ITEMS
-  timestamp: string;
-  sender: string;
-};
+import { Message } from '../../../../shared/types';
 
 const chat = createSlice({
   name: 'chat',
@@ -13,17 +7,8 @@ const chat = createSlice({
     messages: [] as Message[],
   },
   reducers: {
-    addMessage(
-      state,
-      {
-        payload: { sender, message },
-      }: PayloadAction<Omit<Message, 'timestamp'>>
-    ) {
-      state.messages.push({
-        message,
-        sender,
-        timestamp: new Date().toLocaleTimeString(),
-      });
+    addMessage(state, { payload }: PayloadAction<Message>) {
+      state.messages.push(payload);
     },
   },
 });

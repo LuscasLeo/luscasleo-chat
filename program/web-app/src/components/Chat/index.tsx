@@ -9,11 +9,10 @@ import React, {
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { RootState } from '../../store';
-import { addMessage } from '../../store/chat/chat.reducer';
 import { signOut } from '../../store/login/login.reducer';
 import {
-  setUpWebSocket,
   sendMessage,
+  setUpWebSocket,
 } from '../../store/websocket/websocket.reducer';
 import {
   ChatContainer,
@@ -55,24 +54,14 @@ const Chat: React.FC<{}> = () => {
       debounceScrollRef.current();
       setDoScroll(false);
     }
-  }, [doScroll]);
+  }, [doScroll, messages]);
 
   //WHEN MESSAGE SUBMITTED
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!messageValue) return;
-    sendMessage(
-      JSON.stringify({
-        message: messageValue,
-        sender: username,
-      })
-    );
-    dispatch(
-      addMessage({
-        message: messageValue,
-        sender: username,
-      })
-    );
+    sendMessage(messageValue);
+
     setMessageValue('');
     scrollToBottom();
   };
@@ -91,7 +80,7 @@ const Chat: React.FC<{}> = () => {
             <strong>
               [{message.timestamp}] {message.sender}:{' '}
             </strong>
-            <span>{message.message}</span>
+            <span>{message.value}</span>
           </ChatMessage>
         ))}
 
