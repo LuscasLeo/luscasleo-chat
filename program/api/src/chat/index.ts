@@ -9,6 +9,7 @@ import WebSocketServer from "../socket/server";
 import { Message, User } from "../../../shared/types";
 import { WebSocketClient } from "../socket/client";
 import { decode } from "../encryption/jwt";
+import { UserSession } from "./types";
 
 const logger = getLogger("Chat Manager Instance");
 export default class ChatRoom {
@@ -17,27 +18,42 @@ export default class ChatRoom {
   socketReceiver: MessageReceiver<[WebSocketClient]>;
   usersReceiver: MessageReceiver<[User]>;
 
-  users: Map<WebSocketClient, User>;
+  sessions: Map<string, UserSession>;
+  sessionsByClient: Map<WebSocketClient, UserSession>;
 
   constructor(server: WebSocketServer<MessageInstance>) {
     this.messages = [];
     this.server = server;
-    this.users = new Map();
+    this.sessions = new Map();
+    this.sessionsByClient = new Map();
 
     this.initializeReceivers();
+
+    server.onConnectionClose((client) => {
+      const session = this.sessionsByClient.get(client);
+      if (!session) {
+        logger.warn("No session for " + client.connectionString());
+        return;
+      }
+
+      this.sessionsByClient.delete(client);
+      this.sessions.delete(session.user.username);
+
+      logger.debug(`[ON CLOSE] USER ${session.user.username} LOGGED OUT`);
+    });
 
     server.onMessage((client, message) => {
       const socketReceiver = this.socketReceiver[message.header];
       const userReceiver = this.usersReceiver[message.header];
 
-      const user = this.users.get(client);
+      const session = this.sessionsByClient.get(client);
 
       if (socketReceiver) {
         this.socketReceiver[message.header](message.payload, [client]);
       }
 
-      if (user && userReceiver) {
-        this.usersReceiver[message.header](message.payload, [user]);
+      if (session && userReceiver) {
+        this.usersReceiver[message.header](message.payload, [session.user]);
       }
     });
   }
@@ -50,9 +66,22 @@ export default class ChatRoom {
           const decoded = decode<{ username: string }>(token);
           const { username } = decoded;
 
-          logger.debug(`Chat handshake token decoded: `, decoded);
+          const user = { username };
 
-          self.users.set(client, { username });
+          if (self.sessions.has(username)) {
+            const outerSession = self.sessions.get(username);
+            outerSession.client.socket.close();
+            self.sessionsByClient.delete(outerSession.client);
+            self.sessions.delete(username);
+          }
+
+          const session: UserSession = {
+            user,
+            client,
+          };
+
+          self.sessions.set(username, session);
+          self.sessionsByClient.set(client, session);
         } catch {
           client.socket.close();
         }
