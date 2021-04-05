@@ -6,7 +6,7 @@ import {
   signInWithCode,
   storeToken,
   validateToken,
-} from '../../services/login';
+} from '../../services/login.service';
 
 const login = createSlice({
   name: 'login',
@@ -41,7 +41,7 @@ const login = createSlice({
 
 export const { signIn, signOut, setLogging } = login.actions;
 
-export function trySignIn(code: string): AppThunk {
+export function trySignInWithGithub(code: string): AppThunk {
   return async function (dispatch: AppDispatch) {
     dispatch(setLogging(true));
     const result = await signInWithCode(code);
@@ -50,7 +50,11 @@ export function trySignIn(code: string): AppThunk {
   };
 }
 
-export function validateLogin(token: string): AppThunk {
+export function trySignIn(username: string, password: string): AppThunk {
+  return async function (dispatch: AppDispatch) {};
+}
+
+export function validateLoginToken(token: string): AppThunk {
   return async function (dispatch: AppDispatch) {
     try {
       const { username } = await validateToken(token);

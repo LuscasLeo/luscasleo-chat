@@ -6,7 +6,8 @@ import {
   MessageInstance,
   MessageReceiver,
 } from '../../../../shared/websocket/communication/types';
-import { getStoredToken } from '../../services/login';
+import { getStoredToken } from '../../services/login.service';
+import { getWebsocketConnectionUrl } from '../../services/websocket.service';
 import { addMessage } from '../chat/chat.reducer';
 
 const connection = {
@@ -17,11 +18,20 @@ const connection = {
 const websocket = createSlice({
   name: 'websocket',
   initialState: {
-    isOpen: false,
+    isConnected: false,
+    isConnecting: false,
+    error: null as any,
   },
   reducers: {
-    setConnectionOpen(state, { payload }: PayloadAction<boolean>) {
-      state.isOpen = payload;
+    setConnected(state, { payload }: PayloadAction<boolean>) {
+      state.isConnected = payload;
+    },
+
+    setConnecting(state, { payload: value }: PayloadAction<boolean>) {
+      state.isConnecting = value;
+    },
+    setError(state, { payload: error }: PayloadAction<boolean>) {
+      state.error = error;
     },
   },
 });
@@ -32,7 +42,7 @@ function sendData(data: any) {
   connection.websocket.send(JSON.stringify(data));
 }
 
-export const { setConnectionOpen } = websocket.actions;
+export const { setConnected, setConnecting } = websocket.actions;
 
 export default websocket.reducer;
 
@@ -45,7 +55,8 @@ function createReceiver(dispatch: AppDispatch): MessageReceiver {
   };
 }
 
-export function setUpWebSocket(url: string): AppThunk {
+export function setUpWebSocket(): AppThunk {
+  const url = getWebsocketConnectionUrl();
   return async function (dispatch: AppDispatch) {
     const receiver = createReceiver(dispatch);
     if (
@@ -53,15 +64,21 @@ export function setUpWebSocket(url: string): AppThunk {
       connection.websocket.readyState === connection.websocket.OPEN
     )
       throw 'Socket connection already open!';
-
+    dispatch(setConnecting(true));
     const ws = (connection.websocket = new WebSocket(url));
 
     ws.addEventListener('open', () => {
-      dispatch(setConnectionOpen((connection.open = true)));
+      dispatch(setConnected((connection.open = true)));
       sendData(clientActions.chatHandshake(getStoredToken()!));
+      dispatch(setConnecting(false));
     });
+
+    ws.addEventListener('error', (event) => {
+      dispatch(setConnecting(false));
+    });
+
     ws.addEventListener('close', () => {
-      dispatch(setConnectionOpen((connection.open = false)));
+      dispatch(setConnected((connection.open = false)));
     });
 
     ws.addEventListener('message', (event) => {

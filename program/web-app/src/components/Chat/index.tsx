@@ -29,7 +29,9 @@ const Chat: React.FC<{}> = () => {
   const dispatch = useDispatch();
   const { messages } = useSelector((state: RootState) => state.chat);
   const { username, isLogged } = useSelector((state: RootState) => state.login);
-  const { isOpen } = useSelector((state: RootState) => state.websocket);
+  const { isConnected, isConnecting } = useSelector(
+    (state: RootState) => state.websocket
+  );
 
   useEffect(() => {
     if (!isLogged) history.push('/');
@@ -66,14 +68,20 @@ const Chat: React.FC<{}> = () => {
     scrollToBottom();
   };
 
+  const connectWebsocket = () => dispatch(setUpWebSocket());
+
+  useEffect(() => {
+    if (!isConnected && !isConnecting) {
+      connectWebsocket();
+    }
+  }, []);
+
+  if (isConnecting) return <span>Conectando ao servidor websocket</span>;
+
   return (
     <ChatContainer fluid>
       <LogoutButton onClick={() => dispatch(signOut())}>Sair</LogoutButton>
-      <LogoutButton
-        onClick={() => dispatch(setUpWebSocket('ws://localhost:3311'))}
-      >
-        Conexão ({isOpen ? 'Aberta' : 'Fechada'})
-      </LogoutButton>
+
       <ChatHistoryArea>
         {messages.map((message, index) => (
           <ChatMessage key={index}>

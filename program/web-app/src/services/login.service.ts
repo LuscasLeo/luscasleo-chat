@@ -35,3 +35,9 @@ export function storeToken(token: string) {
 export const getStoredToken = () => localStorage.getItem(TOKEN_NAME);
 
 export const removeStoredToken = () => localStorage.removeItem(TOKEN_NAME);
+
+export async function isAvailableUsername(username: string) {
+  await new Promise((rs) => setTimeout(rs, 3000));
+
+  return !['luscasleo', '-system'].includes(username.toLowerCase());
+}

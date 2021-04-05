@@ -1,15 +1,33 @@
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React, { useEffect, useState } from 'react';
-import { Button } from 'react-bootstrap';
+import { error } from 'console';
+import React, { FormEvent, useEffect } from 'react';
+import { Button, FormControl } from 'react-bootstrap';
+import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router';
-import { getStoredToken } from '../../services/login';
+import { getStoredToken } from '../../services/login.service';
 import { RootState } from '../../store';
-import { trySignIn, validateLogin } from '../../store/login/login.reducer';
+import {
+  trySignInWithGithub,
+  validateLoginToken,
+} from '../../store/login/login.reducer';
 import { useQuery } from '../../utils';
-import { LoginContainer } from './style';
+import { LoginContainer, LoginForm } from './style';
+
+interface LoginFormFields {
+  username: string;
+  password: string;
+}
+
 const Login: React.FC<{}> = () => {
+  const {
+    handleSubmit,
+    register,
+    watch,
+    formState: { errors },
+  } = useForm<LoginFormFields>();
+
   const history = useHistory();
   const query = useQuery();
 
@@ -25,12 +43,36 @@ const Login: React.FC<{}> = () => {
   useEffect(() => {
     const code = query.get('code');
     const storedToken = getStoredToken();
-    if (!!code) dispatch(trySignIn(code));
-    else if (!!storedToken) dispatch(validateLogin(storedToken));
+    if (!!code) dispatch(trySignInWithGithub(code));
+    else if (!!storedToken) dispatch(validateLoginToken(storedToken));
   }, []);
+
+  const handleSubmitLogin = handleSubmit((data, event) => {});
 
   return (
     <LoginContainer>
+      <LoginForm onSubmit={handleSubmitLogin}>
+        <FormControl
+          placeholder="Username"
+          type="text"
+          {...register('username', {
+            required: true,
+          })}
+        />
+
+        {errors.username && <span>Username is required!</span>}
+        <FormControl
+          placeholder="password"
+          type="password"
+          {...register('password', {
+            required: true,
+          })}
+        />
+        {errors.password && <span>Password is required!</span>}
+        <Button type="submit">Sign In</Button>
+      </LoginForm>
+
+      <span>or</span>
       <Button
         disabled={isLogging || isLogged}
         as="a"
